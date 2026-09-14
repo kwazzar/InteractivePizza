@@ -1,0 +1,11 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g filter="url(#shadow)">
+<circle cx="24" cy="24" r="24" fill="white"/>
+</g>
+<path d="M26.126 16.2422C29.187 14.7179 33.25 16.8596 33.25 20.9688C33.25 22.9696 32.122 24.8961 30.48 26.749C28.838 28.6022 26.826 30.2317 25.188 31.7168C24.549 32.2966 23.451 32.2966 22.812 31.7168C21.174 30.2317 19.162 28.6022 17.52 26.749C15.878 24.8961 14.75 22.9696 14.75 20.9688C14.75 16.8596 18.813 14.7179 21.874 16.2422C23.168 16.8865 24.832 16.8865 26.126 16.2422Z" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
+<defs>
+<filter id="shadow" x="0" y="0" width="48" height="48" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="black" flood-opacity="0.15"/>
+</filter>
+</defs>
+</svg>
