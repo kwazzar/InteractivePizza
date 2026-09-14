@@ -19,8 +19,4 @@ final class AppContainer {
     func makeRouter() -> AppRouter {
         router
     }
-
-    func makeSplashViewModel() -> SplashViewModel {
-        SplashViewModel(router: router)
-    }
 }

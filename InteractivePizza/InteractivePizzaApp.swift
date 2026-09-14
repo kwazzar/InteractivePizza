@@ -16,7 +16,6 @@ struct InteractivePizzaApp: App {
             RootView()
                 .environment(container.makeThemeManager())
                 .environment(container.makeRouter())
-                .environment(container.makeSplashViewModel())
         }
     }
 }

@@ -11,11 +11,22 @@ struct RootView: View {
     @Environment(AppRouter.self) private var router
 
     var body: some View {
-        switch router.route {
-        case .splash:
-            SplashView()
-        case .home:
-            HomeView()
+        Group {
+            switch router.route {
+            case .splash:
+                SplashView()
+                    .transition(.opacity)
+            case .home:
+                HomeView()
+                    .transition(.opacity)
+            }
         }
+        .animation(.easeInOut(duration: 0.35), value: router.route)
     }
+}
+
+#Preview {
+    return RootView()
+        .environment(ThemeManager())
+        .environment(AppRouter())
 }
