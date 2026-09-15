@@ -46,7 +46,8 @@ struct HomeView: View {
                             Image("zoom")
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: 48, height: 48)
+                                .frame(width: 88, height: 88)
+                                .contentShape(Circle())
                         }
                         .buttonStyle(ZoomButtonStyle(isZoomed: isZoomed))
                         .zIndex(1)
