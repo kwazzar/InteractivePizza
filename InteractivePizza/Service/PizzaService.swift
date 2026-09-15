@@ -7,37 +7,43 @@
 
 import Foundation
 
-final class PizzaService {
+actor PizzaService {
     static let shared = PizzaService()
-
+    
     private let session: URLSession
     private let baseURL = URL(string: "https://oursongapp.com/api/pizzas")!
     private var imageCache: [String: Data] = [:]
-
+    
     init(session: URLSession = .shared) {
         self.session = session
+        if URLCache.shared.diskCapacity == 0 {
+            URLCache.shared.diskCapacity = 50 * 1024 * 1024 // 50MB
+            URLCache.shared.memoryCapacity = 10 * 1024 * 1024 // 10MB
+        }
     }
-
+    
     func fetchPizzas() async throws -> [Pizza] {
         let data = try await fetchData(from: baseURL)
-        return try JSONDecoder().decode(PizzasResponse.self, from: data).pizzas.map { $0.toPizza() }
+        return try await MainActor.run {
+            try JSONDecoder().decode(PizzasResponse.self, from: data).pizzas.map { $0.toPizza() }
+        }
     }
-
+    
     func fetchImageData(from urlString: String) async throws -> Data {
         if let cached = imageCache[urlString] { return cached }
         guard let url = URL(string: urlString) else { throw URLError(.badURL) }
-
-        if let disk = await Task.detached(priority: .userInitiated, operation: { ImageDiskCache.data(for: url) }).value {
+    
+        if let disk = ImageDiskCache.data(for: url) {
             imageCache[urlString] = disk
             return disk
         }
-
-        let data = try await fetchData(from: url)
+    
+        let (data, _) = try await session.data(from: url)
         imageCache[urlString] = data
-        await Task.detached(priority: .utility, operation: { ImageDiskCache.set(data, for: url) }).value
+        Task { @MainActor in ImageDiskCache.set(data, for: url) }
         return data
     }
-
+    
     private func fetchData(from url: URL) async throws -> Data {
         let (data, response) = try await session.data(from: url)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {

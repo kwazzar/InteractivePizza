@@ -20,18 +20,24 @@ struct HomeView: View {
         GeometryReader { geo in
             VStack(spacing: 30) {
                 navigationBar
-                
-                ZStack {
-                    pizzaCarousel
-                    zoomButton
-                }
-                .modifier(FlyInModifier(delay: 1, direction: .bottom, appeared: appeared))
-                .animation(.spring(response: 0.35, dampingFraction: 0.75), value: viewModel.selectedSize)
-                .onChange(of: viewModel.selectedPizza?.id) { _, _ in
-                    showZoomButton = false
-                    Task { @MainActor in
-                        try? await Task.sleep(for: .seconds(0.35))
-                        showZoomButton = true
+
+                if viewModel.isLoading {
+                    PizzaCarouselPlaceholder()
+                } else if let error = viewModel.errorMessage {
+                    errorView(error)
+                } else {
+                    ZStack {
+                        pizzaCarousel
+                        zoomButton
+                    }
+                    .modifier(FlyInModifier(delay: 1, direction: .bottom, appeared: appeared))
+                    .animation(.spring(response: 0.35, dampingFraction: 0.75), value: viewModel.selectedSize)
+                    .onChange(of: viewModel.selectedPizza?.id) { _, _ in
+                        showZoomButton = false
+                        Task { @MainActor in
+                            try? await Task.sleep(for: .seconds(0.35))
+                            showZoomButton = true
+                        }
                     }
                 }
                 
@@ -65,6 +71,19 @@ struct HomeView: View {
                 appeared = true
             }
         }
+    }
+    
+    private func errorView(_ message: String) -> some View {
+        VStack(spacing: 12) {
+            Text(message)
+                .font(.figtree(.regular, size: 14))
+                .multilineTextAlignment(.center)
+            Button("Спробувати ще раз") {
+                Task { await viewModel.refresh() }
+            }
+        }
+        .frame(height: 275)
+        .padding(.horizontal, 30)
     }
     
     private func toggleZoom(_ open: Bool) {

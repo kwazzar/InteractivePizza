@@ -22,6 +22,9 @@ struct SplashView: View {
                 .opacity(splashViewModel.shrinking ? 0 : 1)
             Spacer()
         }
+        .task {
+            await splashViewModel.animationPizza()
+        }
         .background(Color.white.ignoresSafeArea())
     }
 }
@@ -34,7 +37,7 @@ final class SplashViewModel {
     let images = (1...8).map { "pizza\($0)" }
     
     func animationPizza() async {
-        let endTime = CFAbsoluteTimeGetCurrent() + 3.5
+        let endTime = CFAbsoluteTimeGetCurrent() + 1.5
         while CFAbsoluteTimeGetCurrent() < endTime {
             for index in 1...images.count {
                 try? await Task.sleep(for: .milliseconds(120))

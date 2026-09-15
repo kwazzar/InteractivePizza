@@ -9,45 +9,39 @@ import SwiftUI
 
 struct RootView: View {
     @Environment(AppRouter.self) private var router
-
-    @State private var viewModel: HomeViewModel
+    @Environment(\.appContainer) private var appContainer
     @State private var splashViewModel = SplashViewModel()
-
-    init(
-        viewModel: HomeViewModel
-    ) {
-        _viewModel = State(initialValue: viewModel)
-    }
-
+    
     var body: some View {
         Group {
             switch router.route {
             case .splash:
                 SplashView(splashViewModel: splashViewModel)
+                    .onAppear {
+                        handleSplashScreenAppearance()
+                    }
             case .home:
-                HomeView(viewModel: viewModel)
+                HomeView(viewModel: appContainer.makeHomeViewmodel())
             }
         }
-        .animation(
-            .easeInOut(duration: 0.35),
-            value: router.route
-        )
         .task {
-            async let loadTask = viewModel.load()
-            async let splashTask = splashViewModel.animationPizza()
-
+            async let loadTask = appContainer.makeHomeViewmodel().load()
             await loadTask
-            await splashTask
-
-            withAnimation {
-                router.navigate(to: .home)
-            }
+        }
+    }
+    
+    private func handleSplashScreenAppearance() {
+        Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            
+            router.navigate(to: .home)
+            
         }
     }
 }
 
 #Preview {
-    RootView(viewModel: HomeViewModel())
+    RootView()
         .environment(ThemeManager())
         .environment(AppRouter())
 }

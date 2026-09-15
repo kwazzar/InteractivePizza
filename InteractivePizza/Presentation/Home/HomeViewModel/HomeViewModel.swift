@@ -8,6 +8,7 @@
 import SwiftUI
 
 @Observable
+@MainActor
 final class HomeViewModel {
     var selectedIndex = 0
     var selectedSize: PizzaSize? = .medium
@@ -17,13 +18,21 @@ final class HomeViewModel {
     var pizzas: [Pizza] = []
     var errorMessage: String?
 
-    var pizzaImages: [String: Image] = [:]
-    var failedImageURLs: Set<String> = []
+    @MainActor private var pizzaImages: [String: Image] = [:]
+    @MainActor private var failedImageURLs: Set<String> = []
 
     private let service: PizzaService
-
+    
     init(service: PizzaService = .shared) {
         self.service = service
+    }
+    
+    func pizzaImage(for urlString: String) -> Image? {
+        pizzaImages[urlString]
+    }
+    
+    func pizzaImageFailed(for urlString: String) -> Bool {
+        failedImageURLs.contains(urlString)
     }
 
     // MARK: - Derived state
@@ -40,9 +49,6 @@ final class HomeViewModel {
         guard let id, let index = pizzas.firstIndex(where: { $0.id == id }) else { return }
         selectedIndex = index
     }
-
-    func pizzaImage(for urlString: String) -> Image? { pizzaImages[urlString] }
-    func pizzaImageFailed(for urlString: String) -> Bool { failedImageURLs.contains(urlString) }
 
     var selectedPrice: Double {
         let unitPrice = selectedPizza?.variants
@@ -66,9 +72,11 @@ final class HomeViewModel {
     }
 
     func load() async {
+        isLoading = true
         await loadPizzas()
-        await loadAllImages()
+        await loadImages()
         errorMessage = nil
+        isLoading = false
     }
 
     func refresh() async {
@@ -76,26 +84,36 @@ final class HomeViewModel {
         await load()
     }
 
-    private func loadAllImages() async {
-        for pizza in pizzas {
-            await loadPizzaImage(for: pizza.imageURL)
+    private func loadImages() async {
+        await withTaskGroup(of: Void.self) { group in
+            for pizza in pizzas where !pizza.imageURL.isEmpty {
+                group.addTask { [self] in await loadImage(for: pizza.imageURL) }
+            }
         }
     }
 
-    func loadPizzaImage(for urlString: String) async {
-        guard pizzaImages[urlString] == nil, !failedImageURLs.contains(urlString) else { return }
+    private func loadImage(for urlString: String) async {
+        await MainActor.run {
+            guard pizzaImages[urlString] == nil, !failedImageURLs.contains(urlString) else { return }
+        }
 
         do {
             let data = try await service.fetchImageData(from: urlString)
             guard !Task.isCancelled else { return }
             guard let uiImage = UIImage(data: data) else {
-                failedImageURLs.insert(urlString)
+                _ = await MainActor.run {
+                    failedImageURLs.insert(urlString)
+                }
                 return
             }
-            pizzaImages[urlString] = Image(uiImage: uiImage)
+            _ = await MainActor.run {
+                pizzaImages[urlString] = Image(uiImage: uiImage)
+            }
         } catch {
             guard !Task.isCancelled else { return }
-            failedImageURLs.insert(urlString)
+            _ = await MainActor.run {
+                failedImageURLs.insert(urlString)
+            }
         }
     }
 }
