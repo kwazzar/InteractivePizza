@@ -1,5 +1,5 @@
 //
-//  InteractivePizzaApp.swift
+//  AppRouter.swift
 //  InteractivePizza
 //
 //  Created by kwazzar on 14.09.2026.

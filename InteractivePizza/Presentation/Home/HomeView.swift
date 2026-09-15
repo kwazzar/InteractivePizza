@@ -79,32 +79,13 @@ struct HomeView: View {
                 .padding(.horizontal, 10)
             }
             .overlay {
-                if isZoomed,
-                   let pizza = viewModel.selectedPizza,
-                   let image = viewModel.pizzaImage(for: pizza.imageURL) {
-                    let pizzaCenterY: CGFloat = 250
-                    let anchorY = geo.size.height > 0 ? pizzaCenterY / geo.size.height : 0.3
-
-                    ZStack {
-                        theme.background.ignoresSafeArea()
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: geo.size.width, height: geo.size.height)
-                            .scaleEffect(1.3)
-                            .allowsHitTesting(false)
-                    }
-                    .ignoresSafeArea()
-                    .contentShape(Rectangle())
-                    .onTapGesture { toggleZoom(false) }
-                    .gesture(
-                        MagnificationGesture()
-                            .onEnded { _ in
-                                toggleZoom(false)
-                            }
-                    )
-                    .transition(.scale(scale: 0.05, anchor: UnitPoint(x: 0.5, y: anchorY)).combined(with: .opacity))
-                }
+                ZoomOverlay(
+                    isActive: isZoomed,
+                    image: viewModel.selectedPizza.flatMap { viewModel.pizzaImage(for: $0.imageURL) },
+                    background: theme.background,
+                    geoSize: geo.size,
+                    onDismiss: { toggleZoom(false) }
+                )
             }
             .background(
                 ZStack {
@@ -132,19 +113,6 @@ struct HomeView: View {
 extension Double {
     var asUSD: String {
         String(format: "$%.2f", self)
-    }
-}
-
-private struct ZoomButtonStyle: ButtonStyle {
-    let isZoomed: Bool
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.85 : (isZoomed ? 1.12 : 1.0))
-            .opacity(configuration.isPressed ? 0.8 : 1.0)
-            .rotationEffect(.degrees(configuration.isPressed ? -8 : (isZoomed ? 180 : 0)))
-            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isPressed)
-            .animation(.spring(response: 0.35, dampingFraction: 0.75), value: isZoomed)
     }
 }
 

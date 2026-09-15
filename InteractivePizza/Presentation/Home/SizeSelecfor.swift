@@ -1,5 +1,5 @@
 //
-//  PizzaCarousel.swift
+//  SizeSelector.swift
 //  InteractivePizza
 //
 //  Created by kwazzar on 15.09.2026.
