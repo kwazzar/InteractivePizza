@@ -7,49 +7,82 @@
 
 import Foundation
 
-@MainActor
-enum PizzaError: Error {
-    case badURL
-    case network(Error)
-    case decoding(Error)
-    case emptyResponse
-}
-
-@MainActor
 final class PizzaService {
     static let shared = PizzaService()
-    
-    private let baseURL = "https://oursongapp.com/api/pizzas"
-    
-    private init() {}
-    
+
+    private let session: URLSession
+    private let baseURL = URL(string: "https://oursongapp.com/api/pizzas")!
+    private var imageCache: [String: Data] = [:]
+
+    init(session: URLSession = .shared) {
+        self.session = session
+    }
+
     func fetchPizzas() async throws -> [Pizza] {
-        guard let url = URL(string: baseURL) else {
-            throw PizzaError.badURL
+        let data = try await fetchData(from: baseURL)
+        return try JSONDecoder().decode(PizzasResponse.self, from: data).pizzas.map { $0.toPizza() }
+    }
+
+    func fetchImageData(from urlString: String) async throws -> Data {
+        if let cached = imageCache[urlString] { return cached }
+        guard let url = URL(string: urlString) else { throw URLError(.badURL) }
+
+        if let disk = await Task.detached(priority: .userInitiated, operation: { ImageDiskCache.data(for: url) }).value {
+            imageCache[urlString] = disk
+            return disk
         }
-        
-        let (data, response) = try await URLSession.shared.data(from: url)
-        
-        // Validate HTTP response
-        guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200 else {
-            throw PizzaError.network(URLError(.badServerResponse))
+
+        let data = try await fetchData(from: url)
+        imageCache[urlString] = data
+        await Task.detached(priority: .utility, operation: { ImageDiskCache.set(data, for: url) }).value
+        return data
+    }
+
+    private func fetchData(from url: URL) async throws -> Data {
+        let (data, response) = try await session.data(from: url)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            throw URLError(.badServerResponse)
         }
-        
-        do {
-            let decoded = try JSONDecoder().decode(PizzasResponse.self, from: data)
-            return decoded.pizzas.map { apiPizza in
-                Pizza(
-                    id: apiPizza.id,
-                    name: apiPizza.name,
-                    description: apiPizza.description,
-                    imageURL: apiPizza.imageURL,
-                    amount: 1,
-                    price: Int((apiPizza.variants.first?.price ?? 0).rounded())
-                )
+        return data
+    }
+}
+
+private final class ImageDiskCache {
+    nonisolated private static let directory: URL? = {
+        guard let base = try? FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true) else { return nil }
+        let dir = base.appendingPathComponent("PizzaImages", isDirectory: true)
+        return (try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)) != nil ? dir : nil
+    }()
+
+    nonisolated static func data(for url: URL) -> Data? {
+        guard let dir = directory else { return nil }
+        return try? Data(contentsOf: dir.appendingPathComponent(fileName(for: url)))
+    }
+
+    nonisolated static func set(_ data: Data, for url: URL) {
+        guard let dir = directory else { return }
+        try? data.write(to: dir.appendingPathComponent(fileName(for: url)), options: .atomic)
+    }
+
+    nonisolated private static func fileName(for url: URL) -> String {
+        (url.host ?? "host") + url.path.replacingOccurrences(of: "/", with: "_")
+    }
+}
+
+// MARK: - Mapping
+
+private extension ApiPizza {
+    func toPizza() -> Pizza {
+        Pizza(
+            id: id,
+            name: name,
+            description: description,
+            imageURL: imageURL,
+            amount: 1,
+            variants: variants.compactMap { v in
+                guard let size = PizzaSize(rawValue: v.size) else { return nil }
+                return PizzaVariant(size: size, price: v.price)
             }
-        } catch {
-            throw PizzaError.decoding(error)
-        }
+        )
     }
 }
