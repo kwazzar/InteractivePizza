@@ -1,3 +1,10 @@
+//
+//  Font+Figtree.swift
+//  InteractivePizza
+//
+//  Created by kwazzar on 15.09.2026.
+//
+
 import SwiftUI
 
 extension Font {

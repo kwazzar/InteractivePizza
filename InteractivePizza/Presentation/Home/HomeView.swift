@@ -44,8 +44,9 @@ struct HomeView: View {
                             toggleZoom(!isZoomed)
                         } label: {
                             Image("zoom")
-                                .scaledToFill()
-                                .frame(width: 88, height: 88)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 48, height: 48)
                         }
                         .buttonStyle(ZoomButtonStyle(isZoomed: isZoomed))
                         .zIndex(1)
