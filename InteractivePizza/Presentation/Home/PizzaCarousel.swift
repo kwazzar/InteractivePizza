@@ -24,6 +24,7 @@ struct PizzaCarousel: View {
     let image: (String) -> Image?
     let imageFailed: (String) -> Bool
     var onPinchZoom: () -> Void
+    var isZoomed: Bool = false
 
     @State private var scrolledID: Pizza.ID?
 
@@ -37,7 +38,8 @@ struct PizzaCarousel: View {
         selection: Binding<Pizza.ID?>,
         image: @escaping (String) -> Image?,
         imageFailed: @escaping (String) -> Bool,
-        onPinchZoom: @escaping () -> Void = {}
+        onPinchZoom: @escaping () -> Void = {},
+        isZoomed: Bool = false
     ) {
         self.pizzas = pizzas
         self.pizzaSize = pizzaSize
@@ -45,6 +47,7 @@ struct PizzaCarousel: View {
         self.image = image
         self.imageFailed = imageFailed
         self.onPinchZoom = onPinchZoom
+        self.isZoomed = isZoomed
         _scrolledID = State(initialValue: selection.wrappedValue)
     }
 
@@ -60,8 +63,10 @@ struct PizzaCarousel: View {
                             .frame(width: slot, height: hero)
                             .padding(.horizontal, 4)
                             .scaleEffect(sizeRatio, anchor: .center)
+                            .scaleEffect(pizza.id == selection && isZoomed ? 1.8 : 1.0)
+                            .opacity(pizza.id == selection && isZoomed ? 0 : 1)
                             .animation(
-                                pizza.id == selection ? .spring(response: 0.35, dampingFraction: 0.75) : nil,
+                                pizza.id == selection ? .spring(response: 0.45, dampingFraction: 0.7) : nil,
                                 value: pizzaSize
                             )
                             .zIndex(pizza.id == selection ? 1 : 0)

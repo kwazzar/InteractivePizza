@@ -35,17 +35,19 @@ struct HomeView: View {
                             ),
                             image: { viewModel.pizzaImage(for: $0) },
                             imageFailed: { viewModel.pizzaImageFailed(for: $0) },
-                            onPinchZoom: { toggleZoom(true) }
+                            onPinchZoom: { toggleZoom(true) },
+                            isZoomed: isZoomed
                         )
                         .frame(height: 275)
 
                         Button {
-                            toggleZoom(true)
+                            toggleZoom(!isZoomed)
                         } label: {
                             Image("zoom")
-                                .frame(width: 48, height: 48)
+                                .scaledToFill()
+                                .frame(width: 88, height: 88)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(ZoomButtonStyle(isZoomed: isZoomed))
                         .zIndex(1)
                     }
                     .animation(.spring(response: 0.35, dampingFraction: 0.75), value: viewModel.selectedSize)
@@ -70,7 +72,7 @@ struct HomeView: View {
                         set: { viewModel.quantity = $0 }
                     ),
                     price: viewModel.selectedPrice.asUSD,
-                    onAdd: { /* додати в кошик */ }
+                    onAdd: { }
                 )
                 .padding(.top, 30)
                 .padding(.bottom, 15)
@@ -80,20 +82,28 @@ struct HomeView: View {
                 if isZoomed,
                    let pizza = viewModel.selectedPizza,
                    let image = viewModel.pizzaImage(for: pizza.imageURL) {
-                    let coverScale = (geo.size.width * geo.size.width + geo.size.height * geo.size.height).squareRoot() / 275
+                    let pizzaCenterY: CGFloat = 250
+                    let anchorY = geo.size.height > 0 ? pizzaCenterY / geo.size.height : 0.3
+
                     ZStack {
                         theme.background.ignoresSafeArea()
                         image
                             .resizable()
                             .scaledToFill()
-                            .frame(width: 275, height: 275)
-                            .clipShape(Circle())
-                            .scaleEffect(coverScale)
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .scaleEffect(1.3)
                             .allowsHitTesting(false)
                     }
+                    .ignoresSafeArea()
                     .contentShape(Rectangle())
                     .onTapGesture { toggleZoom(false) }
-                    .transition(.scale(scale: 0.1, anchor: .center))
+                    .gesture(
+                        MagnificationGesture()
+                            .onEnded { _ in
+                                toggleZoom(false)
+                            }
+                    )
+                    .transition(.scale(scale: 0.05, anchor: UnitPoint(x: 0.5, y: anchorY)).combined(with: .opacity))
                 }
             }
             .background(
@@ -113,8 +123,7 @@ struct HomeView: View {
     }
 
     private func toggleZoom(_ open: Bool) {
-        print("ZOOM toggle open=\(open)")
-        withAnimation(.spring(response: open ? 0.35 : 0.2, dampingFraction: open ? 0.8 : 0.9)) {
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.78)) {
             isZoomed = open
         }
     }
@@ -123,6 +132,19 @@ struct HomeView: View {
 extension Double {
     var asUSD: String {
         String(format: "$%.2f", self)
+    }
+}
+
+private struct ZoomButtonStyle: ButtonStyle {
+    let isZoomed: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.85 : (isZoomed ? 1.12 : 1.0))
+            .opacity(configuration.isPressed ? 0.8 : 1.0)
+            .rotationEffect(.degrees(configuration.isPressed ? -8 : (isZoomed ? 180 : 0)))
+            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isPressed)
+            .animation(.spring(response: 0.35, dampingFraction: 0.75), value: isZoomed)
     }
 }
 
