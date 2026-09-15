@@ -12,6 +12,7 @@ final class HomeViewModel {
     var selectedIndex = 0
     var selectedSize: PizzaSize? = .medium
     var quantity = 1
+    var isLoading = true
 
     var pizzas: [Pizza] = []
     var errorMessage: String?
@@ -59,6 +60,7 @@ final class HomeViewModel {
             selectedIndex = pizzas.isEmpty ? 0 : min(1, pizzas.count - 1)
             selectedSize = selectedPizza?.defaultSize
         } catch {
+            print("❌ fetchPizzas failed:", error)
             errorMessage = "Помилка завантаження: \(error.localizedDescription)"
         }
     }
@@ -66,6 +68,12 @@ final class HomeViewModel {
     func load() async {
         await loadPizzas()
         await loadAllImages()
+        errorMessage = nil
+    }
+
+    func refresh() async {
+        isLoading = true
+        await load()
     }
 
     private func loadAllImages() async {

@@ -19,32 +19,11 @@ struct HomeView: View {
     var body: some View {
         GeometryReader { geo in
             VStack(spacing: 30) {
-                HomeNavbar(
-                    pizzaName: .constant(viewModel.pizzaName),
-                    backAction: { },
-                    heartAction: { }
-                )
-                .modifier(FlyInModifier(delay: 0, direction: .top, appeared: appeared))
-                
+                navigationBar
                 
                 ZStack {
-                    PizzaCarousel(
-                        pizzas: viewModel.pizzas,
-                        pizzaSize: viewModel.selectedSize ?? .medium,
-                        selection: Binding(
-                            get: { viewModel.selectedPizza?.id },
-                            set: { viewModel.select($0) }
-                        ),
-                        image: { viewModel.pizzaImage(for: $0) },
-                        imageFailed: { viewModel.pizzaImageFailed(for: $0) },
-                        onPinchZoom: { toggleZoom(true) },
-                        isZoomed: isZoomed
-                    )
-                    .frame(height: 275)
-                    
-                    ZoomButton(isZoomed: $isZoomed,
-                               toggleZoom: toggleZoom)
-                    .opacity(showZoomButton ? 1 : 0)
+                    pizzaCarousel
+                    zoomButton
                 }
                 .modifier(FlyInModifier(delay: 1, direction: .bottom, appeared: appeared))
                 .animation(.spring(response: 0.35, dampingFraction: 0.75), value: viewModel.selectedSize)
@@ -57,32 +36,9 @@ struct HomeView: View {
                 }
                 
                 Spacer()
-                
-                SizeSelector(selectedSize: Binding(
-                    get: { viewModel.selectedSize },
-                    set: { viewModel.selectedSize = $0 }
-                ))
-                .modifier(FlyInModifier(delay: 2, direction: .bottom, appeared: appeared))
-                
-                Text(viewModel.description)
-                    .font(.figtree(.regular, size: 14))
-                    .lineSpacing(10)
-                    .padding(.horizontal, 30)
-                    .padding(.bottom, 15)
-                    .modifier(FlyInModifier(delay: 3, direction: .bottom, appeared: appeared))
-                
-                OrderLine(
-                    quantity: Binding(
-                        get: { viewModel.quantity },
-                        set: { viewModel.quantity = $0 }
-                    ),
-                    price: viewModel.selectedPrice.asUSD,
-                    onAdd: { }
-                )
-                .padding(.top, 30)
-                .padding(.bottom, 15)
-                .padding(.horizontal, 10)
-                .modifier(FlyInModifier(delay: 4, direction: .bottom, appeared: appeared))
+                sizeSelector
+                descriptionText
+                orderline
             }
             .overlay {
                 ZoomOverlay(
@@ -116,6 +72,73 @@ struct HomeView: View {
             isZoomed = open
         }
     }
+}
+
+//MARK: - Views
+private extension HomeView {
+    var navigationBar: some View {
+        HomeNavbar(
+            pizzaName: .constant(viewModel.pizzaName),
+            backAction: { },
+            heartAction: { }
+        )
+        .modifier(FlyInModifier(delay: 0, direction: .top, appeared: appeared))
+    }
+    
+    var pizzaCarousel: some View {
+        PizzaCarousel(
+            pizzas: viewModel.pizzas,
+            pizzaSize: viewModel.selectedSize ?? .medium,
+            selection: Binding(
+                get: { viewModel.selectedPizza?.id },
+                set: { viewModel.select($0) }
+            ),
+            image: { viewModel.pizzaImage(for: $0) },
+            imageFailed: { viewModel.pizzaImageFailed(for: $0) },
+            onPinchZoom: { toggleZoom(true) },
+            isZoomed: isZoomed
+        )
+        .frame(height: 275)
+    }
+    
+    var zoomButton: some View {
+        ZoomButton(isZoomed: $isZoomed,
+                   toggleZoom: toggleZoom)
+        .opacity(showZoomButton ? 1 : 0)
+    }
+    
+    var sizeSelector: some View {
+        SizeSelector(selectedSize: Binding(
+            get: { viewModel.selectedSize },
+            set: { viewModel.selectedSize = $0 }
+        ))
+        .modifier(FlyInModifier(delay: 2, direction: .bottom, appeared: appeared))
+    }
+    
+    var descriptionText: some View {
+        Text(viewModel.description)
+            .font(.figtree(.regular, size: 14))
+            .lineSpacing(10)
+            .padding(.horizontal, 30)
+            .padding(.bottom, 15)
+            .modifier(FlyInModifier(delay: 3, direction: .bottom, appeared: appeared))
+    }
+    
+    var orderline: some View {
+        OrderLine(
+            quantity: Binding(
+                get: { viewModel.quantity },
+                set: { viewModel.quantity = $0 }
+            ),
+            price: viewModel.selectedPrice.asUSD,
+            onAdd: { }
+        )
+        .padding(.top, 30)
+        .padding(.bottom, 15)
+        .padding(.horizontal, 10)
+        .modifier(FlyInModifier(delay: 4, direction: .bottom, appeared: appeared))
+    }
+    
 }
 
 struct PizzaCarouselPlaceholder: View {
