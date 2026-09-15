@@ -14,7 +14,8 @@ final class AppContainer {
     
     private lazy var themeManager = ThemeManager()
     private lazy var router = AppRouter()
-    private lazy var homeViewmodel = HomeViewModel()
+    private lazy var pizzaService = PizzaService.shared
+    private lazy var homeViewmodel = HomeViewModel(service: pizzaService)
 
     func makeThemeManager() -> ThemeManager {
         themeManager

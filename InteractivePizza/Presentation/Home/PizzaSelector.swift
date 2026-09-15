@@ -8,26 +8,30 @@
 import SwiftUI
 
 struct PizzaSelector: View {
-    var pizza: Pizza
+    let pizzaSize: PizzaSize
+    let image: Image?
+    let hasFailed: Bool
 
     var body: some View {
-        VStack {
-            if let url = URL(string: pizza.imageURL) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFit()
-                    case .failure:
-                        Image("PepperoniBlast3")
-                            .foregroundStyle(.secondary)
-                    default:
-                        ProgressView()
-                    }
-                }
+        Group {
+            if let image {
+                image
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: pizzaSize.imageSize, height: pizzaSize.imageSize)
+            } else if hasFailed {
+                fallback
+            } else {
+                ProgressView()
+                    .frame(width: pizzaSize.imageSize, height: pizzaSize.imageSize)
             }
         }
-        .frame(height: 275)
+        .frame(width: 275, height: 275)
+        .animation(.spring(response: 0.35, dampingFraction: 0.75), value: pizzaSize)
+    }
+
+    private var fallback: some View {
+        Text("Pizza not available")
+            .font(.figtree(.medium, size: 18))
     }
 }

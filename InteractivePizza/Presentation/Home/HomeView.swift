@@ -8,43 +8,53 @@
 import SwiftUI
 
 struct HomeView: View {
-    @State var ViewModel: HomeViewModel
+    @State var viewModel: HomeViewModel
     @Environment(ThemeManager.self) private var theme
-    @State private var appeared = false
-    @State private var selectedIndex = 0
-    @State private var pizzaName = "Pepperoni Blast"
-    @State private var description: String = "The combination of perfectly melted mozzarella \ncheese, tangy tomato sauce, and a crispy yet \nchewy crust creates a harmonious balance that \nleaves you wanting more."
-
-    private var selectedPizza: Pizza? {
-        guard ViewModel.pizzas.indices.contains(selectedIndex) else { return nil }
-        return ViewModel.pizzas[selectedIndex]
-    }
 
     var body: some View {
         GeometryReader { geo in
             VStack(spacing: 30) {
-                HomeNavbar(pizzaName: $pizzaName,
-                           backAction: { },
-                           heartAction: { })
-                if ViewModel.isLoading {
+                HomeNavbar(
+                    pizzaName: .constant(viewModel.pizzaName),
+                    backAction: { },
+                    heartAction: { }
+                )
+
+                if viewModel.isLoading {
                     ProgressView()
                         .frame(height: 275)
-                } else if let pizza = selectedPizza {
-                    PizzaSelector(pizza: pizza)
+                } else if viewModel.selectedPizza != nil {
+                    PizzaSelector(
+                        pizzaSize: viewModel.selectedSize ?? .medium,
+                        image: viewModel.pizzaImage,
+                        hasFailed: viewModel.pizzaImageFailed
+                    )
+                    .animation(.spring(response: 0.35, dampingFraction: 0.75), value: viewModel.selectedSize)
                 }
+
                 Spacer()
-                SizeSelector()
-           
-                Text(description)
+
+                SizeSelector(selectedSize: Binding(
+                    get: { viewModel.selectedSize },
+                    set: { viewModel.selectedSize = $0 }
+                ))
+
+                Text(viewModel.description)
                     .font(.figtree(.regular, size: 14))
                     .lineSpacing(10)
                     .padding(.horizontal, 30)
                     .padding(.bottom, 15)
-                    
-                
-                OrderLine()
-                    .padding(.bottom, 15)
-                    .padding(.horizontal, 10)
+
+                OrderLine(
+                    quantity: Binding(
+                        get: { viewModel.quantity },
+                        set: { viewModel.quantity = $0 }
+                    ),
+                    price: viewModel.selectedPrice.asUSD,
+                    onAdd: { /* додати в кошик */ }
+                )
+                .padding(.bottom, 15)
+                .padding(.horizontal, 10)
             }
             .background(
                 ZStack {
@@ -54,25 +64,26 @@ struct HomeView: View {
                         .frame(width: 607, height: 607)
                         .position(x: geo.size.width / 2, y: 250)
                 }
-                    .ignoresSafeArea()
+                .ignoresSafeArea()
             )
         }
         .task {
-            await ViewModel.load()
+            await viewModel.load()
         }
-        .onChange(of: ViewModel.pizzas.count) { _, _ in
-            syncSelectedPizza()
+        .task(id: viewModel.selectedPizza?.id) {
+            guard let imageURL = viewModel.selectedPizza?.imageURL else { return }
+            await viewModel.loadPizzaImage(for: imageURL)
         }
     }
+}
 
-    private func syncSelectedPizza() {
-        guard let pizza = selectedPizza else { return }
-        pizzaName = pizza.name
-        description = pizza.description
+extension Double {
+    var asUSD: String {
+        String(format: "$%.2f", self)
     }
 }
 
 #Preview {
-    HomeView(ViewModel: HomeViewModel())
+    HomeView(viewModel: HomeViewModel())
         .environment(ThemeManager())
 }

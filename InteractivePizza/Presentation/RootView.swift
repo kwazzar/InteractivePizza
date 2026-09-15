@@ -18,7 +18,7 @@ struct RootView: View {
                 SplashView()
                     .transition(.opacity)
             case .home:
-                HomeView(ViewModel: container.makeHomeViewmodel())
+                HomeView(viewModel: container.makeHomeViewmodel())
                     .transition(.opacity)
             }
         }

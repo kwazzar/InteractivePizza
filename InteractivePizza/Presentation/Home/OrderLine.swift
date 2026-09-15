@@ -9,28 +9,30 @@ import SwiftUI
 
 struct OrderLine: View {
     @Environment(ThemeManager.self) private var theme
-    @State private var quantity: Int = 1
-    var price: String = "$17.99"
+    @Binding var quantity: Int
+    var price: String
     var onAdd: (() -> Void)?
-
+    
     var body: some View {
-        HStack {
+        HStack(spacing: 8) {
             amountSelector
-            
-            Spacer()
             
             Text(price)
                 .font(.figtree(.black, size: 24))
                 .foregroundStyle(.black)
-            
-            Spacer()
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .layoutPriority(1)
+                .padding(.horizontal, priceHorizontalPadding)
             
             Button(action: { onAdd?() }) {
-                Text("Add")
-                    .font(.figtree(.black, size: 24))
+                Text(textButton)
+                    .font(.figtree(.black, size: buttonFontSize))
                     .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                     .frame(height: 48)
-                    .padding(.horizontal, 18)
+                    .padding(.horizontal)
                     .background(theme.accent, in: Capsule())
             }
         }
@@ -40,8 +42,9 @@ struct OrderLine: View {
 }
 
 private extension OrderLine {
+    
     var amountSelector: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: selectorSpacing) {
             Button(action: {
                 if quantity > 1 { quantity -= 1 }
             }) {
@@ -59,7 +62,9 @@ private extension OrderLine {
             Text("\(quantity)")
                 .font(.figtree(.bold, size: 20))
                 .foregroundStyle(.black)
-                .frame(minWidth: 20)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .frame(width: quantityWidth)
 
             Button(action: {
                 quantity += 1
@@ -75,12 +80,43 @@ private extension OrderLine {
                     )
             }
         }
+        .padding(.horizontal, selectorHorizontalPadding)
         .frame(height: 48)
         .background(theme.highlight, in: Capsule())
     }
 }
 
+extension OrderLine {
+    private var priceHorizontalPadding: CGFloat {
+        switch price.count {
+        case 0...4: return 12
+        case 5...6: return 8
+        default: return 4
+        }
+    }
+    
+    private var buttonFontSize: CGFloat {
+        quantity >= 100 ? 18 : 24
+    }
+    
+    private var quantityWidth: CGFloat {
+        CGFloat(max(String(quantity).count, 1)) * 14 + 10
+    }
+    
+    private var selectorSpacing: CGFloat {
+        quantity >= 100 ? 8 : 12
+    }
+    
+    private var selectorHorizontalPadding: CGFloat {
+        quantity >= 100 ? 6 : 0
+    }
+    
+    private var textButton: String {
+        quantity >= 100 ? "Pizza" : "Add"
+    }
+}
+
 #Preview {
-    OrderLine()
+    OrderLine(quantity: .constant(1), price: "$18.00")
         .environment(ThemeManager())
 }

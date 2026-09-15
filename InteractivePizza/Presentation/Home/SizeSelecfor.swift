@@ -1,20 +1,26 @@
 import SwiftUI
 
-enum Size: String, CaseIterable {
-    case small, medium, large
-    
+
+extension PizzaSize {
     var title: String {
         switch self {
         case .small: return "S"
         case .medium: return "M"
         case .large: return "L"
         }
-        
+    }
+    
+    var imageSize: CGFloat {
+        switch self {
+        case .small: return 196
+        case .medium: return 244
+        case .large: return 274
+        }
     }
 }
 
 struct SizeSelector: View {
-    @State private var selectedSize: Size? = .medium
+    @Binding var selectedSize: PizzaSize?
     
     var body: some View {
         HStack(spacing: 45) {
@@ -30,9 +36,9 @@ struct SizeSelector: View {
 }
 
 struct SizeButton: View {
-    let size: Size
-    @Binding var selectedSize: Size?
-    let action: (Size) -> Void
+    let size: PizzaSize
+    @Binding var selectedSize: PizzaSize?
+    let action: (PizzaSize) -> Void
     
     var body: some View {
         Button(action: {
@@ -55,5 +61,5 @@ struct SizeButton: View {
 }
 
 #Preview {
-    SizeSelector()
+    SizeSelector(selectedSize: .constant(.medium))
 }
