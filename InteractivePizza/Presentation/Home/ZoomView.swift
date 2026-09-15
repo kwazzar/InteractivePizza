@@ -7,7 +7,27 @@
 
 import SwiftUI
 
-struct ZoomButtonStyle: ButtonStyle {
+struct ZoomButton: View {
+    @Binding var isZoomed: Bool
+    let toggleZoom: (Bool) -> Void
+
+    var body: some View {
+        Button {
+            toggleZoom(!isZoomed)
+        } label: {
+            Image("zoom")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 88, height: 88)
+                .scaleEffect(2.0)
+                .contentShape(Circle())
+        }
+        .buttonStyle(ZoomButtonStyle(isZoomed: isZoomed))
+        .zIndex(1)
+    }
+}
+
+private struct ZoomButtonStyle: ButtonStyle {
     let isZoomed: Bool
 
     func makeBody(configuration: Configuration) -> some View {

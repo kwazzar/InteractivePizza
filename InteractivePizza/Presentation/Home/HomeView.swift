@@ -11,6 +11,7 @@ struct HomeView: View {
     @State var viewModel: HomeViewModel
     @Environment(ThemeManager.self) private var theme
     @State private var isZoomed = false
+    @State private var showZoomButton = true
 
     var body: some View {
         GeometryReader { geo in
@@ -39,20 +40,19 @@ struct HomeView: View {
                             isZoomed: isZoomed
                         )
                         .frame(height: 275)
-
-                        Button {
-                            toggleZoom(!isZoomed)
-                        } label: {
-                            Image("zoom")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 88, height: 88)
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(ZoomButtonStyle(isZoomed: isZoomed))
-                        .zIndex(1)
+                        
+                        ZoomButton(isZoomed: $isZoomed,
+                                   toggleZoom: toggleZoom)
+                        .opacity(showZoomButton ? 1 : 0)
                     }
                     .animation(.spring(response: 0.35, dampingFraction: 0.75), value: viewModel.selectedSize)
+                    .onChange(of: viewModel.selectedPizza?.id) { _, _ in
+                        showZoomButton = false
+                        Task { @MainActor in
+                            try? await Task.sleep(for: .seconds(0.35))
+                            showZoomButton = true
+                        }
+                    }
                 }
                 
                 Spacer()
