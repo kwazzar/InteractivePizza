@@ -79,6 +79,7 @@ private extension ApiPizza {
             description: description,
             imageURL: imageURL,
             amount: 1,
+            defaultSize: PizzaSize(rawValue: defaultSize) ?? .medium,
             variants: variants.compactMap { v in
                 guard let size = PizzaSize(rawValue: v.size) else { return nil }
                 return PizzaVariant(size: size, price: v.price)

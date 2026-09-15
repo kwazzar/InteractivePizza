@@ -18,8 +18,8 @@ final class HomeViewModel {
     var isLoading = false
     var errorMessage: String?
 
-    var pizzaImage: Image?
-    var pizzaImageFailed = false
+    var pizzaImages: [String: Image] = [:]
+    var failedImageURLs: Set<String> = []
 
     private let service: PizzaService
 
@@ -37,6 +37,14 @@ final class HomeViewModel {
     var pizzaName: String { selectedPizza?.name ?? "" }
     var description: String { selectedPizza?.description ?? "" }
 
+    func select(_ id: Pizza.ID?) {
+        guard let id, let index = pizzas.firstIndex(where: { $0.id == id }) else { return }
+        selectedIndex = index
+    }
+
+    func pizzaImage(for urlString: String) -> Image? { pizzaImages[urlString] }
+    func pizzaImageFailed(for urlString: String) -> Bool { failedImageURLs.contains(urlString) }
+
     var selectedPrice: Double {
         let unitPrice = selectedPizza?.variants
             .first { $0.size == (selectedSize ?? .medium) }?
@@ -52,26 +60,34 @@ final class HomeViewModel {
 
         do {
             pizzas = try await service.fetchPizzas()
+            selectedIndex = pizzas.isEmpty ? 0 : min(1, pizzas.count - 1)
+            selectedSize = selectedPizza?.defaultSize
+            await loadAllImages()
         } catch {
             errorMessage = "Помилка завантаження: \(error.localizedDescription)"
         }
     }
 
+    private func loadAllImages() async {
+        for pizza in pizzas {
+            await loadPizzaImage(for: pizza.imageURL)
+        }
+    }
+
     func loadPizzaImage(for urlString: String) async {
-        pizzaImageFailed = false
-        pizzaImage = nil
+        guard pizzaImages[urlString] == nil, !failedImageURLs.contains(urlString) else { return }
 
         do {
             let data = try await service.fetchImageData(from: urlString)
             guard !Task.isCancelled else { return }
             guard let uiImage = UIImage(data: data) else {
-                pizzaImageFailed = true
+                failedImageURLs.insert(urlString)
                 return
             }
-            pizzaImage = Image(uiImage: uiImage)
+            pizzaImages[urlString] = Image(uiImage: uiImage)
         } catch {
             guard !Task.isCancelled else { return }
-            pizzaImageFailed = true
+            failedImageURLs.insert(urlString)
         }
     }
 }

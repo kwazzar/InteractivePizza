@@ -36,7 +36,7 @@ struct OrderLine: View {
                     .background(theme.accent, in: Capsule())
             }
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 10)
         .frame(maxWidth: .infinity)
     }
 }
@@ -89,7 +89,7 @@ private extension OrderLine {
 extension OrderLine {
     private var priceHorizontalPadding: CGFloat {
         switch price.count {
-        case 0...4: return 12
+        case 0...4: return 20
         case 5...6: return 8
         default: return 4
         }

@@ -1,20 +1,18 @@
+//
+//  PizzaCarousel.swift
+//  InteractivePizza
+//
+//  Created by kwazzar on 15.09.2026.
+//
+
 import SwiftUI
 
-
-extension PizzaSize {
+private extension PizzaSize {
     var title: String {
         switch self {
         case .small: return "S"
         case .medium: return "M"
         case .large: return "L"
-        }
-    }
-    
-    var imageSize: CGFloat {
-        switch self {
-        case .small: return 196
-        case .medium: return 244
-        case .large: return 274
         }
     }
 }
@@ -28,6 +26,13 @@ struct SizeSelector: View {
                 .offset(y: -20)
             
             SizeButton(size: .medium, selectedSize: $selectedSize) { _ in }
+                .overlay(alignment: .top) {
+                    Image("banana")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 97, height: 63)
+                        .offset(y: -55)
+                }
             
             SizeButton(size: .large, selectedSize: $selectedSize) { _ in }
                 .offset(y: -20)
