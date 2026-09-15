@@ -5,38 +5,22 @@
 //  Created by kwazzar on 14.09.2026.
 //
 
-struct Pizza {
-    var id: String
-    var name: String
-    var description: String
-    var imageURL: String
+struct Pizza: Identifiable {
+    let id: String
+    let name: String
+    let description: String
+    let imageURL: String
     var amount: Int
-    var price: Int
+    let variants: [PizzaVariant]
 }
 
-struct PizzaVariant: Decodable {
-    var size: String
-    var price: Double
+struct PizzaVariant {
+    let size: PizzaSize
+    let price: Double
 }
 
-struct PizzasResponse: Decodable {
-    var pizzas: [PizzaAPI]
-}
-
-struct PizzaAPI: Decodable {
-    var id: String
-    var name: String
-    var description: String
-    var imageURL: String
-    var variants: [PizzaVariant]
-
-    enum CodingKeys: String, CodingKey {
-        case id, name, description, variants
-        case imageURL = "image_url"
-    }
-}
-
-enum PizzaSource {
-    case api([Pizza])          // дані з мережі
-    case local([Pizza])        // локальні Pizza піци
+enum PizzaSize: String, CaseIterable {
+    case small = "S"
+    case medium = "M"
+    case large = "L"
 }
