@@ -5,12 +5,16 @@
 //  Created by kwazzar on 14.09.2026.
 //
 
-import Foundation
+import SwiftUI
 
-@MainActor
 final class AppContainer {
+    static let shared = AppContainer()
+    
+    private init() { }
+    
     private lazy var themeManager = ThemeManager()
     private lazy var router = AppRouter()
+    private lazy var homeViewmodel = HomeViewModel()
 
     func makeThemeManager() -> ThemeManager {
         themeManager
@@ -18,5 +22,22 @@ final class AppContainer {
 
     func makeRouter() -> AppRouter {
         router
+    }
+    
+    func makeHomeViewmodel() -> HomeViewModel {
+        homeViewmodel
+    }
+}
+
+// MARK: - Environment
+
+private struct AppContainerEnvironmentKey: EnvironmentKey {
+    static let defaultValue: AppContainer = .shared
+}
+
+extension EnvironmentValues {
+    var appContainer: AppContainer {
+        get { self[AppContainerEnvironmentKey.self] }
+        set { self[AppContainerEnvironmentKey.self] = newValue }
     }
 }

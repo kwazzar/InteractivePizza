@@ -9,13 +9,15 @@ import SwiftUI
 
 @main
 struct InteractivePizzaApp: App {
-    private let container = AppContainer()
+    @State private var container = AppContainer.shared
 
     var body: some Scene {
         WindowGroup {
             RootView()
+                .environment(\.appContainer, container)
                 .environment(container.makeThemeManager())
                 .environment(container.makeRouter())
+                
         }
     }
 }

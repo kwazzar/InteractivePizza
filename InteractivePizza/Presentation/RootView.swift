@@ -9,6 +9,7 @@ import SwiftUI
 
 struct RootView: View {
     @Environment(AppRouter.self) private var router
+    @Environment(\.appContainer) private var container
 
     var body: some View {
         Group {
@@ -17,7 +18,7 @@ struct RootView: View {
                 SplashView()
                     .transition(.opacity)
             case .home:
-                HomeView()
+                HomeView(ViewModel: container.makeHomeViewmodel())
                     .transition(.opacity)
             }
         }
