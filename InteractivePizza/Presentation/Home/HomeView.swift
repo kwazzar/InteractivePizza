@@ -11,7 +11,7 @@ struct HomeView: View {
     @State var viewModel: HomeViewModel
     @Environment(ThemeManager.self) private var theme
     @State private var isZoomed = false
-    
+
     var body: some View {
         GeometryReader { geo in
             VStack(spacing: 30) {
@@ -25,26 +25,28 @@ struct HomeView: View {
                     ProgressView()
                         .frame(height: 275)
                 } else if viewModel.selectedPizza != nil {
-                    PizzaCarousel(
-                        pizzas: viewModel.pizzas,
-                        pizzaSize: viewModel.selectedSize ?? .medium,
-                        selection: Binding(
-                            get: { viewModel.selectedPizza?.id },
-                            set: { viewModel.select($0) }
-                        ),
-                        image: { viewModel.pizzaImage(for: $0) },
-                        imageFailed: { viewModel.pizzaImageFailed(for: $0) }
-                    )
-                    .frame(height: 275)
-                    .overlay(alignment: .center) {
+                    ZStack {
+                        PizzaCarousel(
+                            pizzas: viewModel.pizzas,
+                            pizzaSize: viewModel.selectedSize ?? .medium,
+                            selection: Binding(
+                                get: { viewModel.selectedPizza?.id },
+                                set: { viewModel.select($0) }
+                            ),
+                            image: { viewModel.pizzaImage(for: $0) },
+                            imageFailed: { viewModel.pizzaImageFailed(for: $0) },
+                            onPinchZoom: { toggleZoom(true) }
+                        )
+                        .frame(height: 275)
+
                         Button {
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                                isZoomed = true
-                            }
+                            toggleZoom(true)
                         } label: {
                             Image("zoom")
                                 .frame(width: 48, height: 48)
                         }
+                        .buttonStyle(.plain)
+                        .zIndex(1)
                     }
                     .animation(.spring(response: 0.35, dampingFraction: 0.75), value: viewModel.selectedSize)
                 }
@@ -77,7 +79,8 @@ struct HomeView: View {
             .overlay {
                 if isZoomed,
                    let pizza = viewModel.selectedPizza,
-                   let image = viewModel.pizzaImage(for: pizza.id) {
+                   let image = viewModel.pizzaImage(for: pizza.imageURL) {
+                    let coverScale = (geo.size.width * geo.size.width + geo.size.height * geo.size.height).squareRoot() / 275
                     ZStack {
                         theme.background.ignoresSafeArea()
                         image
@@ -85,17 +88,12 @@ struct HomeView: View {
                             .scaledToFill()
                             .frame(width: 275, height: 275)
                             .clipShape(Circle())
-                            .scaleEffect(
-                                (geo.size.width * geo.size.width + geo.size.height * geo.size.height).squareRoot() / 275
-                            )
+                            .scaleEffect(coverScale)
+                            .allowsHitTesting(false)
                     }
                     .contentShape(Rectangle())
-                    .onTapGesture {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                            isZoomed = false
-                        }
-                    }
-                    .transition(.scale(scale: 0.15, anchor: .center))
+                    .onTapGesture { toggleZoom(false) }
+                    .transition(.scale(scale: 0.1, anchor: .center))
                 }
             }
             .background(
@@ -111,6 +109,13 @@ struct HomeView: View {
         }
         .task {
             await viewModel.load()
+        }
+    }
+
+    private func toggleZoom(_ open: Bool) {
+        print("ZOOM toggle open=\(open)")
+        withAnimation(.spring(response: open ? 0.35 : 0.2, dampingFraction: open ? 0.8 : 0.9)) {
+            isZoomed = open
         }
     }
 }

@@ -23,6 +23,7 @@ struct PizzaCarousel: View {
     @Binding var selection: Pizza.ID?
     let image: (String) -> Image?
     let imageFailed: (String) -> Bool
+    var onPinchZoom: () -> Void
 
     @State private var scrolledID: Pizza.ID?
 
@@ -35,13 +36,15 @@ struct PizzaCarousel: View {
         pizzaSize: PizzaSize,
         selection: Binding<Pizza.ID?>,
         image: @escaping (String) -> Image?,
-        imageFailed: @escaping (String) -> Bool
+        imageFailed: @escaping (String) -> Bool,
+        onPinchZoom: @escaping () -> Void = {}
     ) {
         self.pizzas = pizzas
         self.pizzaSize = pizzaSize
         self._selection = selection
         self.image = image
         self.imageFailed = imageFailed
+        self.onPinchZoom = onPinchZoom
         _scrolledID = State(initialValue: selection.wrappedValue)
     }
 
@@ -104,6 +107,19 @@ struct PizzaCarousel: View {
         .clipShape(Circle())
         .contentShape(Circle())
         .onTapGesture { selection = pizza.id }
+        .gesture(
+            MagnificationGesture()
+                .onChanged { value in
+                    print("CAROUSEL pinch changed value=\(value)")
+                }
+                .onEnded { value in
+                    print("CAROUSEL pinch ended value=\(value)")
+                    if value > 1.15 {
+                        print("CAROUSEL pinch → open")
+                        onPinchZoom()
+                    }
+                }
+        )
     }
 }
 
