@@ -12,7 +12,10 @@ struct HomeView: View {
     @Environment(ThemeManager.self) private var theme
     @State private var isZoomed = false
     @State private var showZoomButton = true
-
+    @State private var appeared = false
+    
+    private let entryAnimation = Animation.spring(response: 0.45, dampingFraction: 0.82)
+    
     var body: some View {
         GeometryReader { geo in
             VStack(spacing: 30) {
@@ -21,37 +24,35 @@ struct HomeView: View {
                     backAction: { },
                     heartAction: { }
                 )
+                .modifier(FlyInModifier(delay: 0, direction: .top, appeared: appeared))
                 
-                if viewModel.isLoading {
-                    ProgressView()
-                        .frame(height: 275)
-                } else if viewModel.selectedPizza != nil {
-                    ZStack {
-                        PizzaCarousel(
-                            pizzas: viewModel.pizzas,
-                            pizzaSize: viewModel.selectedSize ?? .medium,
-                            selection: Binding(
-                                get: { viewModel.selectedPizza?.id },
-                                set: { viewModel.select($0) }
-                            ),
-                            image: { viewModel.pizzaImage(for: $0) },
-                            imageFailed: { viewModel.pizzaImageFailed(for: $0) },
-                            onPinchZoom: { toggleZoom(true) },
-                            isZoomed: isZoomed
-                        )
-                        .frame(height: 275)
-                        
-                        ZoomButton(isZoomed: $isZoomed,
-                                   toggleZoom: toggleZoom)
-                        .opacity(showZoomButton ? 1 : 0)
-                    }
-                    .animation(.spring(response: 0.35, dampingFraction: 0.75), value: viewModel.selectedSize)
-                    .onChange(of: viewModel.selectedPizza?.id) { _, _ in
-                        showZoomButton = false
-                        Task { @MainActor in
-                            try? await Task.sleep(for: .seconds(0.35))
-                            showZoomButton = true
-                        }
+                
+                ZStack {
+                    PizzaCarousel(
+                        pizzas: viewModel.pizzas,
+                        pizzaSize: viewModel.selectedSize ?? .medium,
+                        selection: Binding(
+                            get: { viewModel.selectedPizza?.id },
+                            set: { viewModel.select($0) }
+                        ),
+                        image: { viewModel.pizzaImage(for: $0) },
+                        imageFailed: { viewModel.pizzaImageFailed(for: $0) },
+                        onPinchZoom: { toggleZoom(true) },
+                        isZoomed: isZoomed
+                    )
+                    .frame(height: 275)
+                    
+                    ZoomButton(isZoomed: $isZoomed,
+                               toggleZoom: toggleZoom)
+                    .opacity(showZoomButton ? 1 : 0)
+                }
+                .modifier(FlyInModifier(delay: 1, direction: .bottom, appeared: appeared))
+                .animation(.spring(response: 0.35, dampingFraction: 0.75), value: viewModel.selectedSize)
+                .onChange(of: viewModel.selectedPizza?.id) { _, _ in
+                    showZoomButton = false
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .seconds(0.35))
+                        showZoomButton = true
                     }
                 }
                 
@@ -61,12 +62,14 @@ struct HomeView: View {
                     get: { viewModel.selectedSize },
                     set: { viewModel.selectedSize = $0 }
                 ))
+                .modifier(FlyInModifier(delay: 2, direction: .bottom, appeared: appeared))
                 
                 Text(viewModel.description)
                     .font(.figtree(.regular, size: 14))
                     .lineSpacing(10)
                     .padding(.horizontal, 30)
                     .padding(.bottom, 15)
+                    .modifier(FlyInModifier(delay: 3, direction: .bottom, appeared: appeared))
                 
                 OrderLine(
                     quantity: Binding(
@@ -79,6 +82,7 @@ struct HomeView: View {
                 .padding(.top, 30)
                 .padding(.bottom, 15)
                 .padding(.horizontal, 10)
+                .modifier(FlyInModifier(delay: 4, direction: .bottom, appeared: appeared))
             }
             .overlay {
                 ZoomOverlay(
@@ -101,14 +105,56 @@ struct HomeView: View {
             )
         }
         .task {
-            await viewModel.load()
+            withAnimation(entryAnimation.delay(0)) {
+                appeared = true
+            }
         }
     }
-
+    
     private func toggleZoom(_ open: Bool) {
         withAnimation(.spring(response: 0.45, dampingFraction: 0.78)) {
             isZoomed = open
         }
+    }
+}
+
+struct PizzaCarouselPlaceholder: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: 16)
+            .fill(Color.gray.opacity(0.2))
+            .frame(height: 275)
+            .overlay {
+                ProgressView()
+            }
+    }
+}
+
+private struct FlyInModifier: ViewModifier {
+    enum Direction { case top, bottom, left, right }
+    
+    let delay: Int
+    let direction: Direction
+    let appeared: Bool
+    
+    private var offset: CGSize {
+        guard !appeared else { return .zero }
+        switch direction {
+        case .top:    return CGSize(width: 0, height: -60)
+        case .bottom: return CGSize(width: 0, height: 60)
+        case .left:   return CGSize(width: -60, height: 0)
+        case .right:  return CGSize(width: 60, height: 0)
+        }
+    }
+    
+    func body(content: Content) -> some View {
+        content
+            .opacity(appeared ? 1 : 0)
+            .offset(offset)
+            .animation(
+                .spring(response: 0.5, dampingFraction: 0.8)
+                .delay(Double(delay) * 0.06),
+                value: appeared
+            )
     }
 }
 

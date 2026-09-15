@@ -13,7 +13,7 @@ struct InteractivePizzaApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
+            RootView(viewModel: container.makeHomeViewmodel())
                 .environment(\.appContainer, container)
                 .environment(container.makeThemeManager())
                 .environment(container.makeRouter())

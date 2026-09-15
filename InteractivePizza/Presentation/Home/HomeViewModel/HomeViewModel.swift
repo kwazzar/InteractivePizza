@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import UIKit
 
 @Observable
 final class HomeViewModel {
@@ -15,7 +14,6 @@ final class HomeViewModel {
     var quantity = 1
 
     var pizzas: [Pizza] = []
-    var isLoading = false
     var errorMessage: String?
 
     var pizzaImages: [String: Image] = [:]
@@ -54,18 +52,20 @@ final class HomeViewModel {
 
     // MARK: - Loading
 
-    func load() async {
-        isLoading = true
-        defer { isLoading = false }
+    func loadPizzas() async {
 
         do {
             pizzas = try await service.fetchPizzas()
             selectedIndex = pizzas.isEmpty ? 0 : min(1, pizzas.count - 1)
             selectedSize = selectedPizza?.defaultSize
-            await loadAllImages()
         } catch {
             errorMessage = "Помилка завантаження: \(error.localizedDescription)"
         }
+    }
+
+    func load() async {
+        await loadPizzas()
+        await loadAllImages()
     }
 
     private func loadAllImages() async {
