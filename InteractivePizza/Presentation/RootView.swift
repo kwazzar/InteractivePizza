@@ -16,25 +16,15 @@ struct RootView: View {
         Group {
             switch router.route {
             case .splash:
-                SplashView(splashViewModel: splashViewModel)
-                    .onAppear {
-                        handleSplashScreenAppearance()
-                    }
+                SplashView(splashViewModel: splashViewModel) {
+                    router.navigate(to: .home)
+                }
             case .home:
                 HomeView(viewModel: appContainer.makeHomeViewmodel())
             }
         }
         .task {
             await appContainer.makeHomeViewmodel().load()
-        }
-    }
-    
-    private func handleSplashScreenAppearance() {
-        Task {
-            try? await Task.sleep(for: .seconds(0.87))
-            
-            router.navigate(to: .home)
-            
         }
     }
 }

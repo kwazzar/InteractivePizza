@@ -109,6 +109,7 @@ struct HomeView: View {
             )
         }
         .task {
+            try? await Task.sleep(for: .milliseconds(50))
             withAnimation(entryAnimation) {
                 appeared = true
             }

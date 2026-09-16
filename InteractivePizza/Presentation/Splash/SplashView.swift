@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SplashView: View {
     @State var splashViewModel: SplashViewModel
+    var onFinish: () -> Void = {}
 
     var body: some View {
         VStack {
@@ -24,6 +25,7 @@ struct SplashView: View {
         }
         .task {
             await splashViewModel.animationPizza()
+            onFinish()
         }
         .background(Color.white.ignoresSafeArea())
     }
@@ -41,7 +43,7 @@ final class SplashViewModel {
         while CFAbsoluteTimeGetCurrent() < endTime {
             for index in 1...images.count {
                 try? await Task.sleep(for: .milliseconds(120))
-                frame = min(index, images.count - 1)
+                frame = index - 1
             }
         }
         try? await Task.sleep(for: .milliseconds(80))
