@@ -10,7 +10,6 @@ struct Pizza: Identifiable {
     let name: String
     let description: String
     let imageURL: String
-    var amount: Int
     let defaultSize: PizzaSize
     let variants: [PizzaVariant]
 }

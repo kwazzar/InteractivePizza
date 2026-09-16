@@ -25,8 +25,7 @@ struct RootView: View {
             }
         }
         .task {
-            async let loadTask = appContainer.makeHomeViewmodel().load()
-            await loadTask
+            await appContainer.makeHomeViewmodel().load()
         }
     }
     

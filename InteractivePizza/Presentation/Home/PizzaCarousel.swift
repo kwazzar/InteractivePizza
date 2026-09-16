@@ -114,13 +114,8 @@ struct PizzaCarousel: View {
         .onTapGesture { selection = pizza.id }
         .gesture(
             MagnificationGesture()
-                .onChanged { value in
-                    print("CAROUSEL pinch changed value=\(value)")
-                }
                 .onEnded { value in
-                    print("CAROUSEL pinch ended value=\(value)")
                     if value > 1.15 {
-                        print("CAROUSEL pinch → open")
                         onPinchZoom()
                     }
                 }
@@ -131,9 +126,9 @@ struct PizzaCarousel: View {
 #Preview {
     PizzaCarousel(
         pizzas: [
-            Pizza(id: "1", name: "Margherita", description: "tomato, mozzarella", imageURL: "", amount: 1, defaultSize: .large, variants: []),
-            Pizza(id: "2", name: "Pepperoni", description: "pepperoni, cheese", imageURL: "", amount: 1, defaultSize: .large, variants: []),
-            Pizza(id: "3", name: "Quattro", description: "four cheeses", imageURL: "", amount: 1, defaultSize: .large, variants: []),
+            Pizza(id: "1", name: "Margherita", description: "tomato, mozzarella", imageURL: "", defaultSize: .large, variants: []),
+            Pizza(id: "2", name: "Pepperoni", description: "pepperoni, cheese", imageURL: "", defaultSize: .large, variants: []),
+            Pizza(id: "3", name: "Quattro", description: "four cheeses", imageURL: "", defaultSize: .large, variants: []),
         ],
         pizzaSize: .large,
         selection: .constant("1"),

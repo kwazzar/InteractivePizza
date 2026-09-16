@@ -22,10 +22,10 @@ struct SizeSelector: View {
     
     var body: some View {
         HStack(spacing: 45) {
-            SizeButton(size: .small, selectedSize: $selectedSize) { _ in }
+            SizeButton(size: .small, selectedSize: $selectedSize)
                 .offset(y: -20)
             
-            SizeButton(size: .medium, selectedSize: $selectedSize) { _ in }
+            SizeButton(size: .medium, selectedSize: $selectedSize)
                 .overlay(alignment: .top) {
                     Image("banana")
                         .resizable()
@@ -34,7 +34,7 @@ struct SizeSelector: View {
                         .offset(y: -55)
                 }
             
-            SizeButton(size: .large, selectedSize: $selectedSize) { _ in }
+            SizeButton(size: .large, selectedSize: $selectedSize)
                 .offset(y: -20)
         }
     }
@@ -43,13 +43,9 @@ struct SizeSelector: View {
 struct SizeButton: View {
     let size: PizzaSize
     @Binding var selectedSize: PizzaSize?
-    let action: (PizzaSize) -> Void
     
     var body: some View {
-        Button(action: {
-            selectedSize = size
-            action(size)
-        }) {
+        Button(action: { selectedSize = size }) {
             Text(size.title.uppercased())
                 .font(.figtree(.medium, size: 18))
                 .lineSpacing(6)

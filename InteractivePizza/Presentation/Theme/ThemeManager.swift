@@ -15,18 +15,15 @@ final class ThemeManager {
     let highlight: Color
     let accent: Color
     let active: Color
-    let placeholder: Color
 
     init(background: Color = Color(hex: 0xFFFFFF),
          highlight: Color = Color(hex: 0xF3E3DA),
          accent: Color = Color(hex: 0x19C4EA),
-         active: Color = Color(hex: 0x000000),
-         placeholder: Color = Color(hex: 0xD9D9D9)) {
+         active: Color = Color(hex: 0x000000)) {
         self.background = background
         self.highlight = highlight
         self.accent = accent
         self.active = active
-        self.placeholder = placeholder
     }
 }
 

@@ -8,8 +8,6 @@
 import Foundation
 
 actor PizzaService {
-    static let shared = PizzaService()
-    
     private let session: URLSession
     private let baseURL = URL(string: "https://oursongapp.com/api/pizzas")!
     private var imageCache: [String: Data] = [:]
@@ -32,12 +30,12 @@ actor PizzaService {
     func fetchImageData(from urlString: String) async throws -> Data {
         if let cached = imageCache[urlString] { return cached }
         guard let url = URL(string: urlString) else { throw URLError(.badURL) }
-    
+
         if let disk = ImageDiskCache.data(for: url) {
             imageCache[urlString] = disk
             return disk
         }
-    
+
         let (data, _) = try await session.data(from: url)
         imageCache[urlString] = data
         Task { @MainActor in ImageDiskCache.set(data, for: url) }
@@ -84,7 +82,6 @@ private extension ApiPizza {
             name: name,
             description: description,
             imageURL: imageURL,
-            amount: 1,
             defaultSize: PizzaSize(rawValue: defaultSize) ?? .medium,
             variants: variants.compactMap { v in
                 guard let size = PizzaSize(rawValue: v.size) else { return nil }
