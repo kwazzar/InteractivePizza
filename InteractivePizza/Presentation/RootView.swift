@@ -32,7 +32,7 @@ struct RootView: View {
     
     private func handleSplashScreenAppearance() {
         Task {
-            try? await Task.sleep(for: .seconds(1.5))
+            try? await Task.sleep(for: .seconds(0.87))
             
             router.navigate(to: .home)
             

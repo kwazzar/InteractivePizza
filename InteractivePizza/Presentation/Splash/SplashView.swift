@@ -37,7 +37,7 @@ final class SplashViewModel {
     let images = (1...8).map { "pizza\($0)" }
     
     func animationPizza() async {
-        let endTime = CFAbsoluteTimeGetCurrent() + 1.5
+        let endTime = CFAbsoluteTimeGetCurrent() + 0.87
         while CFAbsoluteTimeGetCurrent() < endTime {
             for index in 1...images.count {
                 try? await Task.sleep(for: .milliseconds(120))
